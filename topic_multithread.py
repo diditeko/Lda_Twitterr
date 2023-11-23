@@ -13,10 +13,11 @@ from nltk.corpus import stopwords
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from gensim import corpora
 from gensim.models.ldamodel import LdaModel
+from gensim.models.ldamulticore import LdaMulticore
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-
+from concurrent.futures import ThreadPoolExecutor
 
 
 
@@ -45,10 +46,8 @@ def preprocess_text(text):
     tokens = word_tokenize(text)
     return tokens
 
-<<<<<<< HEAD
-stemm_exceptions = ['pemilu', 'memerangi', 'Pemilu']
-=======
->>>>>>> 122d9c77ee7ac90aaee40296d0d15e2f1de2651b
+# stemm_exceptions = ['pemilu', 'memerangi', 'Pemilu']
+
 def stopword(text):
     # Get stopwords from NLTK for Indonesian
     list_stopwords = stopwords.words('indonesian')
@@ -62,25 +61,18 @@ def stopword(text):
     # Convert the list of stopwords to a set for faster lookup
     stopwords_set = list(set(list_stopwords))
     # Create Sastrawi stemmer
-    factory = StemmerFactory()
-    stemmer = factory.create_stemmer()
-<<<<<<< HEAD
+    # factory = StemmerFactory()
+    # stemmer = factory.create_stemmer()
 
-    def custom_stem(word):
-        return word in stemm_exceptions
+    # def custom_stem(word):
+    #     return word in stemm_exceptions
     
-=======
->>>>>>> 122d9c77ee7ac90aaee40296d0d15e2f1de2651b
     #remove stopword
-    tokens_without_stopwords = [word for word in text if word not in stopwords_set]
+    tweet_stem = [word for word in text if word not in stopwords_set]
     #sastrawi
     # tweet_stem = stemmer.stem(tokens_without_stopwords)
-<<<<<<< HEAD
     # tweet_stem = [stemmer.stem(token) for token in tokens_without_stopwords]
-    tweet_stem = [word if custom_stem(word) else stemmer.stem(word) for word in tokens_without_stopwords]
-=======
-    tweet_stem = [stemmer.stem(token) for token in tokens_without_stopwords]
->>>>>>> 122d9c77ee7ac90aaee40296d0d15e2f1de2651b
+    # tweet_stem = [word if custom_stem(word) else stemmer.stem(word) for word in tokens_without_stopwords]
     return tweet_stem
 
 
@@ -91,39 +83,34 @@ def create_lda_inputs(text):
 
     # Generate the document-term matrix
     doc_term_matrix = [dictionary.doc2bow(doc) for doc in text]
+    # print(doc_term_matrix)
 
     return [dictionary, doc_term_matrix]
 
-def perform_lda(doc_term_matrix, total_topics, dictionary, number_words):
-    lda_model = LdaModel(doc_term_matrix, num_topics=total_topics, id2word = dictionary, minimum_probability=0, random_state= 21,alpha= 'symmetric', eta='symmetric')
+def perform_ldamulticore(doc_term_matrix, total_topics, dictionary, number_words):
+    lda_model = LdaMulticore(doc_term_matrix, num_topics=total_topics, workers=4,id2word = dictionary, minimum_probability=0, random_state= 21,alpha= 'asymmetric', eta='symmetric', eval_every=25,minimum_phi_value=0.01)
     topics = lda_model.show_topics(num_topics=total_topics, num_words=number_words,formatted=False)
-        # Extract words from the topics
-    # formatted_topics = [{"topic_num": topic_num, "words": [word for word, prob in words]} for topic_num, words in topics]
-    # formatted_topics = {str(topic_num): [word for word, prob in words] for topic_num, words in topics}
     formatted_topics = [{"topic_num": str(topic_num), "words": [word for word, prob in words]} for topic_num, words in topics]
-<<<<<<< HEAD
     return lda_model, formatted_topics
-=======
-    return formatted_topics
->>>>>>> 122d9c77ee7ac90aaee40296d0d15e2f1de2651b
-    # return topics
 
 def perform_tsne(lda_model, doc_term_matrix):
     # Create a matrix of topic contributions
     hm = np.array([[y for (x,y) in lda_model[doc_term_matrix[i]]] for i in range(len(doc_term_matrix))])
-    # print(hm)
+    print(hm)
     # Convert to DataFrame and fill NaN values with 0
     arr = pd.DataFrame(hm).fillna(0).values
-    # print(arr)
-    scaler =StandardScaler()
-    scaler_arr =  scaler.fit_transform(arr)
+    print(arr)
+    scaler = StandardScaler()
+    scaled_arr = scaler.fit_transform(arr)
     # Perform t-SNE dimension reduction
     tsne_model = TSNE(n_components=2, verbose=1, random_state=21, angle=.7, init='pca', perplexity=1)
-    tsne_lda = tsne_model.fit_transform(scaler_arr)
+    tsne_lda = tsne_model.fit_transform(scaled_arr)
+    # Parallelize t-SNE computation
     #coordinates
     x = tsne_lda[:, 0]
     y = tsne_lda[:, 1]
     coordinatess = pd.DataFrame({'x': x, 'y': y})
 
     return coordinatess
+
 

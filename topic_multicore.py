@@ -83,11 +83,12 @@ def create_lda_inputs(text):
 
     # Generate the document-term matrix
     doc_term_matrix = [dictionary.doc2bow(doc) for doc in text]
+    # print(doc_term_matrix)
 
     return [dictionary, doc_term_matrix]
 
 def perform_ldamulticore(doc_term_matrix, total_topics, dictionary, number_words):
-    lda_model = LdaMulticore(doc_term_matrix, num_topics=total_topics, workers=4,id2word = dictionary, minimum_probability=0, random_state= 21,alpha= 'symmetric', eta='symmetric')
+    lda_model = LdaMulticore(doc_term_matrix, num_topics=total_topics, workers=4,id2word = dictionary, minimum_probability=0, random_state= 21,alpha= 'asymmetric', eta='symmetric')
     topics = lda_model.show_topics(num_topics=total_topics, num_words=number_words,formatted=False)
     formatted_topics = [{"topic_num": str(topic_num), "words": [word for word, prob in words]} for topic_num, words in topics]
     return lda_model, formatted_topics

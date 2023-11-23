@@ -8,7 +8,7 @@ from gensim.models.ldamodel import LdaModel
 from nltk.tokenize import word_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from collections import Counter
-from test2 import preprocess_text, stopword, perform_lda, create_lda_inputs, perform_tsne
+from topic_modelling import preprocess_text, stopword, perform_lda, create_lda_inputs, perform_tsne
 from typing import List
 from itertools import chain
 import os
@@ -26,11 +26,7 @@ model_filename = "model\model\lda_model3"
 
 lda_model = LdaModel.load(model_filename)
 total_topics = 5 # jumlah topik yang akan di extract
-<<<<<<< HEAD
 number_words = 3
-=======
-number_words = 5
->>>>>>> 122d9c77ee7ac90aaee40296d0d15e2f1de2651b
 
 # Create a Pydantic model for input data
 class InputData(BaseModel):
@@ -56,18 +52,13 @@ async def perform_topic_modeling(data: InputData):
     
     # Create LDA inputs for the combined corpus
     dictionary, doc_term_matrix = create_lda_inputs(preproced_text)
-<<<<<<< HEAD
     # print(dictionary)
     print(doc_term_matrix)
-=======
-    print(dictionary)
->>>>>>> 122d9c77ee7ac90aaee40296d0d15e2f1de2651b
     
 
     n_samples = len(doc_term_matrix)
     print(n_samples)
     # Perform LDA on the combined corpus
-<<<<<<< HEAD
     lda_model, topics = perform_lda(doc_term_matrix, total_topics, dictionary, number_words)
     print(topics)
     coordinates = perform_tsne(lda_model, doc_term_matrix)
@@ -84,19 +75,6 @@ async def perform_topic_modeling(data: InputData):
         topic_perc_contrib = float(max(text_topics, key=lambda x: float(x[1]))[1])
 
 
-=======
-    topics = perform_lda(doc_term_matrix, total_topics, dictionary, number_words)
-    coordinates = perform_tsne(lda_model, doc_term_matrix)
-
-    results = []
-    for i, text in enumerate(texts):
-        text_topics = lda_model[doc_term_matrix[i]]
-    
-        # Ensure that the values are explicitly converted to Python floats
-        dominant_topic = max(text_topics, key=lambda x: float(x[1]))[0]
-        topic_perc_contrib = float(max(text_topics, key=lambda x: float(x[1]))[1])
-
->>>>>>> 122d9c77ee7ac90aaee40296d0d15e2f1de2651b
         # Find the corresponding t-SNE coordinates
         coord_index = i if i < len(coordinates) else -1
         x_coord = float(coordinates['x'][coord_index])
